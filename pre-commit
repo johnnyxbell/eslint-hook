@@ -1,0 +1,43 @@
+#!/bin/sh
+
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep ".jsx\{0,1\}$")
+ESLINT="$(git rev-parse --show-toplevel)/node_modules/.bin/eslint"
+
+if [[ "$STAGED_FILES" = "" ]]; then
+  exit 0
+fi
+
+PASS=true
+
+printf "\n\033[35m🧙🏻‍♂️  ... Magic is happening ... 🧙🏻‍♂️\033[0m\n"
+
+# Check for eslint
+if [[ ! -x "$ESLINT" ]]; then
+  printf "\t\033[31mPlease install ESlint\033[0m (npm i --save-dev eslint)"
+  exit 1
+fi
+
+for FILE in $STAGED_FILES
+do
+  "$ESLINT" "$FILE"
+
+  if [[ "$?" == 0 ]]; then
+    printf "\n\033[32mESLint Passed: $FILE\033[0m"
+  else
+    printf "\n\033[31mESLint Failed: $FILE\033[0m"
+    PASS=false
+  fi
+done
+
+if ! $PASS; then
+  printf "\n\033[31mCOMMIT FAILED: \033[0mFix your linting errors bro!\n"
+  printf "\n\033[31m🛑 🛑 🛑 Failed 🛑 🛑 🛑\033[0m\n"
+  exit 1
+else
+  printf "\n\033[32mCOMMIT SUCCEEDED: You may push now...\033[0m\n"
+  printf "\n\033[32m🎉 🎉 🎉 Success 🎉 🎉 🎉\033[0m\n"
+
+  printf "\n"
+fi
+
+exit $?
